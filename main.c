@@ -86,6 +86,158 @@ static void copy_board(int board_origin[8][8], int board_copy[8][8]){
 }
 
 int eval_func(int board[8][8]){
+
+  int fs = 0;
+  //int flag1 = 0;
+  //int flag2 = 0;
+  //int flag3 = 0;
+  //int flag4 = 0;
+  int w = 8;
+
+  int full1 = 1; // 0i
+  int full2 = 1; // i0
+  int full3 = 1; // 7i
+  int full4 = 1; // i7
+
+  for (int i = 0; i < 8; i++){
+    if (board[0][i] == 0){
+      full1 = 0;
+      break;
+    }
+  }
+  if (full1){
+    for(int i = 1; i < 7; i++){
+      fs += board[0][i];
+    }
+  }
+
+  for (int i = 0; i < 8; i++){
+    if (board[i][0] == 0){
+      full2 = 0;
+      break;
+    }
+  }
+  if (full2){
+    for(int i = 1; i < 7; i++){
+      fs += board[i][0];
+    }
+  }
+
+  for (int i = 0; i < 8; i++){
+    if (board[7][i] == 0){
+      full3 = 0;
+      break;
+    }
+  }
+  if (full3){
+    for(int i = 1; i < 7; i++){
+      fs += board[7][i];
+    }
+  }
+
+  for (int i = 0; i < 8; i++){
+    if (board[i][7] == 0){
+      full4 = 0;
+      break;
+    }
+  }
+  if (full4){
+    for(int i = 1; i < 7; i++){
+      fs += board[i][7];
+    }
+  }
+
+
+  if (board[0][0] == 1 || board[0][0] == -1){
+    int side = board[0][0];
+    if (!full1){
+    for (int i = 1; i < 7; i++){
+      if (board[0][i] == side){
+        fs += side;
+      }
+      else break;
+    }
+    }
+    if (!full2){
+    for (int i = 1; i < 7; i++){
+      if (board[i][0] == side){
+        fs += side;
+      }
+      else break;
+      
+    }
+    }  
+  }
+
+  if (board[0][7] == 1 || board[0][7] == -1){
+    int side = board[0][7];
+    if (!full1){
+      for (int i = 6; i > 0; i--){
+        if (board[0][i] == side){
+          fs += side;
+        }
+        else {
+          break;
+        }
+      }
+    }
+    if (!full4){
+    for (int i = 0; i < 7; i++){
+      if (board[i][7] == side){
+        fs += side;
+      }
+      else break;
+      
+    }
+    }  
+  }
+  
+  if (board[7][0] == 1 || board[7][0] == -1){
+    int side = board[7][0];
+    if (!full2){
+      for (int i = 6; i > 0; i--){
+        if (board[i][0] == side){
+          fs += side;
+        }
+        else {
+          break;
+        }
+      }
+    }
+    if (!full3){
+    for (int i = 0; i < 7; i++){
+      if (board[7][i] == side){
+        fs += side;
+      }
+      else break;
+    }
+    }  
+  }
+
+  if (board[7][7] == 1 || board[7][7] == -1){
+    int side = board[7][7];
+    if (!full3){
+      for (int i = 6; i > 0; i--){
+        if (board[7][i] == side){
+          fs += side;
+        }
+        else {
+          break;
+        }
+      }
+    }
+    if (!full4){
+      for (int i = 6; i > 0; i--){
+        if (board[i][7] == side){
+          fs += side;
+        }
+        else {
+          break;
+        }
+      }
+    }
+  }
+
   int sum = 0;
   for (int x = 0; x < 8; x++){
     for (int y = 0; y < 8; y++){
@@ -93,7 +245,7 @@ int eval_func(int board[8][8]){
     }
   }
 
-  return sum;
+  return sum + w * fs;
 }
 
 int max_node(int d, int a, int b, int turn, int board_tmp[8][8], int flag_pass){
@@ -178,10 +330,27 @@ int main(int argc, char **argv)
   int turn;
   int flag_matta = 0;
   int flag_pass = 0;
-  int d = 6;
+  int flag_end = 0;
+  int d = 5;
 
   for (turn = 1;; turn *= -1) {
     print_board();
+
+    int numberofdisks = 0;
+    for (int i = 0; i < 8; i++){
+      for (int j = 0; j < 8; j++){
+        if (board[i][j] != 0){
+          numberofdisks++;
+        }
+      }
+    }
+    if (numberofdisks > 50){
+      flag_end = 1;
+      printf("end game\n");
+    }
+    else {
+      flag_end = 0;
+    }
 
     IntPair legal_moves[60];
     const int nmoves = generate_all_legal_moves(turn, legal_moves);
@@ -229,12 +398,14 @@ int main(int argc, char **argv)
         int tmp_board[8][8];
         copy_board(board, tmp_board);
         my_place_disk(turn, legal_moves[i], tmp_board);
-        //int d = 5;
-        int a = max_node(d, -INF-1, INF+1, turn, tmp_board, 0);
+
+        int b;
+        if (flag_end) b = min_node(100, -INF-1, INF+1, turn, tmp_board, 0);
+        else b = min_node(d, -INF-1, INF+1, turn, tmp_board, 0);
         //copy_board(tmp_board, board);
-        if (a > best){
+        if (b > best){
           move = legal_moves[i];
-          best = a;
+          best = b;
         }
       }
       printf("turn = %d, move = %c%c, evaluation = %d\n", turn, 'a' + move.first, '1' + move.second, best);
@@ -246,12 +417,14 @@ int main(int argc, char **argv)
         int tmp_board[8][8];
         copy_board(board, tmp_board);
         my_place_disk(turn, legal_moves[i], tmp_board);
-        //int d = 5;
-        int b = min_node(d, -INF-1, INF+1, turn, tmp_board, 0);
+
+        int a;
+        if (flag_end) a = max_node(100, -INF-1, INF+1, turn, tmp_board, 0);
+        else a = max_node(d, -INF-1, INF+1, turn, tmp_board, 0);
         //copy_board(tmp_board, board);
-        if (b < best){
+        if (a < best){
           move = legal_moves[i];
-          best = b;
+          best = a;
         }
       }
       printf("turn = %d, move = %c%c, evaluation = %d\n", turn, 'a' + move.first, '1' + move.second, best);
