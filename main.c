@@ -331,19 +331,15 @@ int main(int argc, char **argv)
   int flag_matta = 0;
   int flag_pass = 0;
   int flag_end = 0;
-  int d = 5;
+  int d = 6;
+  int numberofdisks = 4;
+  int numberofdisks_r = 4;
+
 
   for (turn = 1;; turn *= -1) {
     print_board();
 
-    int numberofdisks = 0;
-    for (int i = 0; i < 8; i++){
-      for (int j = 0; j < 8; j++){
-        if (board[i][j] != 0){
-          numberofdisks++;
-        }
-      }
-    }
+  
     if (numberofdisks > 50){
       flag_end = 1;
       printf("end game\n");
@@ -373,6 +369,7 @@ int main(int argc, char **argv)
 	      scanf("%s", buf);
         if (buf[0] == 'm'){
           matta();
+          numberofdisks = numberofdisks_r;
           flag_matta = 1;
           turn *= -1;
           printf("matta!!\n\n");
@@ -382,6 +379,7 @@ int main(int argc, char **argv)
 	      move.second = buf[1] - '1';
 	      if (is_legal_move(turn, move)) {
           reserve_board();
+          numberofdisks_r = numberofdisks;
           break;
         }
 	      printf("%s is not a legal move!\n\n", buf);
@@ -393,7 +391,7 @@ int main(int argc, char **argv)
     } 
     else if (turn == 1){
       //move = legal_moves[0];  // choose the first legal move
-      int best = -INF + 1;
+      int best = -INF - 1;
       for (int i = 0; i < nmoves; i++){
         int tmp_board[8][8];
         copy_board(board, tmp_board);
@@ -401,7 +399,7 @@ int main(int argc, char **argv)
 
         int b;
         if (flag_end) b = min_node(100, -INF-1, INF+1, turn, tmp_board, 0);
-        else b = min_node(d, -INF-1, INF+1, turn, tmp_board, 0);
+        else b = min_node(d, best, INF+1, turn, tmp_board, 0);
         //copy_board(tmp_board, board);
         if (b > best){
           move = legal_moves[i];
@@ -420,7 +418,7 @@ int main(int argc, char **argv)
 
         int a;
         if (flag_end) a = max_node(100, -INF-1, INF+1, turn, tmp_board, 0);
-        else a = max_node(d, -INF-1, INF+1, turn, tmp_board, 0);
+        else a = max_node(d, -INF-1, best, turn, tmp_board, 0);
         //copy_board(tmp_board, board);
         if (a < best){
           move = legal_moves[i];
@@ -430,6 +428,7 @@ int main(int argc, char **argv)
       printf("turn = %d, move = %c%c, evaluation = %d\n", turn, 'a' + move.first, '1' + move.second, best);
     }
     place_disk(turn, move);
+    numberofdisks++;
   }
 
   int judge = count_disks();
